@@ -10,6 +10,7 @@
             --warning-color: #cc3;
             --safe-color: #3c3;
             --primary-color: #55f;
+            --star-color: #ff0;
         }
         
         body {
@@ -39,7 +40,7 @@
         .header {
             grid-area: header;
             text-align: center;
-            border-bottom: 2px solid var(--danger-color);
+            border-bottom: 2px solid var(--star-color);
             padding-bottom: 5px;
             position: relative;
         }
@@ -153,7 +154,7 @@
         }
         
         .map-tile.current {
-            box-shadow: 0 0 0 2px var(--primary-color);
+            box-shadow: 0 0 0 2px var(--star-color);
         }
         
         .map-tile.discovered {
@@ -185,6 +186,11 @@
         
         .btn-primary {
             background-color: var(--primary-color);
+        }
+        
+        .btn-star {
+            background-color: var(--star-color);
+            color: #333;
         }
         
         .btn-danger {
@@ -265,6 +271,11 @@
             color: #99f;
         }
         
+        .log-entry.star {
+            color: var(--star-color);
+            text-shadow: 0 0 5px var(--star-color);
+        }
+        
         /* 标签页样式 */
         .tabs {
             display: flex;
@@ -317,7 +328,7 @@
         }
         
         .skill.available {
-            border-color: var(--primary-color);
+            border-color: var(--star-color);
         }
         
         .skill.unavailable {
@@ -396,6 +407,17 @@
             border-color: var(--danger-color);
         }
         
+        .effect-star {
+            border-color: var(--star-color);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 0, 0.4); }
+            70% { box-shadow: 0 0 0 5px rgba(255, 255, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 0, 0); }
+        }
+        
         /* 移动端优化 */
         @media (max-width: 500px) {
             .container {
@@ -412,6 +434,23 @@
             .action-buttons {
                 grid-template-columns: 1fr;
             }
+        }
+        
+        /* 星烁特效 */
+        .star-particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: var(--star-color);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+            animation: twinkle 1s infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.2; }
+            100% { opacity: 1; }
         }
     </style>
 </head>
@@ -479,7 +518,7 @@
         
         <div class="main-area">
             <div class="location-tag" id="location-tag">避难所</div>
-            <div id="location-description">你在一间破旧的避难所中醒来，窗外传来低沉的嘶吼声...</div>
+            <div id="location-description">你在一间破旧的避难所中醒来，窗外传来低沉的嘶吼声...天空中闪烁着不寻常的星光。</div>
             <div id="event-display"></div>
             
             <div class="status-effects" id="status-effects">
@@ -503,8 +542,10 @@
             <button class="btn" id="btn-craft">🛠️ 制作</button>
             <button class="btn" id="btn-build">🏗️ 建造</button>
             <button class="btn" id="btn-skills">📚 技能</button>
-            <button class="btn btn-primary" id="btn-next">⏭️ 下一时段</button>
+            <button class="btn btn-star" id="btn-next">⏭️ 下一时段</button>
             <button class="btn" id="btn-treat">💉 治疗</button>
+            <button class="btn" id="btn-save">💾 保存</button>
+            <button class="btn" id="btn-load">🔃 加载</button>
         </div>
         
         <div class="inventory">
@@ -544,7 +585,7 @@
             <h3>事件日志</h3>
             <div id="log-entries">
                 <div class="log-entry">[早晨] 你从不安的睡眠中醒来</div>
-                <div class="log-entry">[早晨] 听到远处有玻璃破碎的声音</div>
+                <div class="log-entry star">[早晨] 天空中闪烁着不寻常的星光...</div>
             </div>
         </div>
     </div>
@@ -575,7 +616,7 @@
             <h2 style="margin-top: 0;">技能树</h2>
             <div style="margin-bottom: 15px;">
                 <span>技能点: </span>
-                <span id="skill-points" style="font-weight: bold; color: var(--primary-color);">0</span>
+                <span id="skill-points" style="font-weight: bold; color: var(--star-color);">0</span>
             </div>
             <div id="skill-trees" style="display: grid; gap: 20px;">
                 <!-- 技能树将由JS动态生成 -->
@@ -584,11 +625,24 @@
         </div>
     </div>
 
+    <div id="load-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 100; padding: 20px; box-sizing: border-box; overflow-y: auto;">
+        <div style="background-color: #222; max-width: 500px; margin: 20px auto; padding: 20px; border-radius: 5px; border: 1px solid #333;">
+            <h2 style="margin-top: 0;">加载存档</h2>
+            <div id="save-slots" style="display: grid; gap: 10px;">
+                <button class="btn" onclick="loadGame(1)">存档 1</button>
+                <button class="btn" onclick="loadGame(2)">存档 2</button>
+                <button class="btn" onclick="loadGame(3)">存档 3</button>
+            </div>
+            <button id="btn-close-load" style="margin-top: 20px; padding: 10px 20px; background-color: var(--danger-color); color: white; border: none; border-radius: 5px; cursor: pointer;">关闭</button>
+        </div>
+    </div>
+
     <script>
         // ======================
         // 游戏状态和数据
         // ======================
         const gameState = {
+            version: "1.1",
             day: 1,
             time: 0, // 0-早晨, 1-中午, 2-傍晚, 3-夜晚
             times: ["早晨", "中午", "傍晚", "夜晚"],
@@ -606,8 +660,8 @@
             skillPoints: 0,
             temperature: 22,
             weather: "晴天",
-            weathers: ["晴天", "雨天", "雾天", "暴风雨", "极寒"],
-            weatherIcons: ["☀️", "🌧️", "🌫️", "⛈️", "❄️"],
+            weathers: ["晴天", "雨天", "雾天", "暴风雨", "极寒", "星夜"],
+            weatherIcons: ["☀️", "🌧️", "🌫️", "⛈️", "❄️", "✨"],
             location: "避难所",
             locations: {
                 "避难所": { description: "你的临时庇护所，相对安全", danger: 1, resources: [] },
@@ -618,7 +672,8 @@
                 "居民区": { description: "普通住宅，可能有基本物资", danger: 2, resources: ["食物", "日用品"] },
                 "学校": { description: "可能有书籍和简单工具", danger: 3, resources: ["知识"] },
                 "建筑工地": { description: "建筑材料丰富", danger: 3, resources: ["建材"] },
-                "军事哨所": { description: "高级武器但危险极高", danger: 6, resources: ["武器", "弹药"] }
+                "军事哨所": { description: "高级武器但危险极高", danger: 6, resources: ["武器", "弹药"] },
+                "天文台": { description: "研究星空的地方，可能找到特殊物品", danger: 4, resources: ["星尘"] }
             },
             currentPosition: { x: 2, y: 2 }, // 地图中心位置
             discoveredLocations: ["避难所"],
@@ -646,7 +701,8 @@
                 "布料": { type: "resource", count: 3 },
                 "电子零件": { type: "resource", count: 0 },
                 "弹药": { type: "resource", count: 0 },
-                "燃料": { type: "resource", count: 0 }
+                "燃料": { type: "resource", count: 0 },
+                "星尘": { type: "resource", count: 0 }
             },
             equippedWeapon: null,
             equippedArmor: null,
@@ -658,14 +714,17 @@
                 "雨水收集器": { level: 0, maxLevel: 2, description: "每天提供净水", requirements: { "木材": 5, "布料": 3 } },
                 "菜园": { level: 0, maxLevel: 3, description: "每天提供食物", requirements: { "木材": 8 } },
                 "防御工事": { level: 0, maxLevel: 3, description: "减少被袭击几率", requirements: { "木材": 15, "金属": 10 } },
-                "医疗站": { level: 0, maxLevel: 2, description: "缓慢恢复健康", requirements: { "电子零件": 2, "布料": 5 } }
+                "医疗站": { level: 0, maxLevel: 2, description: "缓慢恢复健康", requirements: { "电子零件": 2, "布料": 5 } },
+                "星尘收集器": { level: 0, maxLevel: 1, description: "收集星尘用于特殊制作", requirements: { "电子零件": 5, "金属": 10 } }
             },
             recipes: {
                 "简易绷带": { type: "medical", materials: { "布料": 2 }, result: { "绷带": 1 } },
                 "木制长矛": { type: "weapon", materials: { "木材": 3 }, result: { "木制长矛": 1 }, requires: { "工作台": 1 } },
                 "简易陷阱": { type: "tool", materials: { "木材": 2, "金属": 1 }, result: { "简易陷阱": 1 }, requires: { "工作台": 1 } },
                 "子弹": { type: "ammo", materials: { "金属": 1 }, result: { "弹药": 5 }, requires: { "工作台": 2 } },
-                "铁制护甲": { type: "armor", materials: { "金属": 5, "布料": 3 }, result: { "铁制护甲": 1 }, requires: { "工作台": 2 } }
+                "铁制护甲": { type: "armor", materials: { "金属": 5, "布料": 3 }, result: { "铁制护甲": 1 }, requires: { "工作台": 2 } },
+                "星光护符": { type: "trinket", materials: { "星尘": 3, "金属": 2 }, result: { "星光护符": 1 }, requires: { "星尘收集器": 1 }, 
+                    effect: { san: 10, description: "缓慢恢复SAN值" } }
             },
             skills: {
                 "生存专家": { 
@@ -709,6 +768,13 @@
                     learned: false, 
                     requirements: ["熟练战士"], 
                     effect: () => { gameState.maxHealth += 20; gameState.health += 20; } 
+                },
+                "星尘学者": {
+                    description: "解锁星尘科技和配方",
+                    cost: 3,
+                    learned: false,
+                    requirements: ["工程师"],
+                    effect: () => { gameState.starKnowledge = true; }
                 }
             },
             events: [],
@@ -718,7 +784,8 @@
             meleeDamageBonus: 1.0,
             rangedDamageBonus: 1.0,
             healingBonus: 1.0,
-            engineerUnlocked: false
+            engineerUnlocked: false,
+            starKnowledge: false
         };
 
         // 缓存DOM元素
@@ -801,11 +868,22 @@
             processStatusEffects();
             triggerRandomEvent();
             updateUI();
+            
+            // 星夜特效
+            if (gameState.weather === "星夜") {
+                createStarParticles();
+            }
         }
 
         function changeWeather() {
-            const weatherIndex = Math.floor(Math.random() * gameState.weathers.length);
-            gameState.weather = gameState.weathers[weatherIndex];
+            // 星夜是稀有天气
+            const weatherPool = [...gameState.weathers];
+            if (Math.random() < 0.9) { // 90%几率不出现星夜
+                weatherPool.pop();
+            }
+            
+            const weatherIndex = Math.floor(Math.random() * weatherPool.length);
+            gameState.weather = weatherPool[weatherIndex];
             
             // 天气效果
             switch (gameState.weather) {
@@ -824,6 +902,10 @@
                 case "极寒":
                     gameState.temperature = -10 + Math.floor(Math.random() * 5);
                     addLog("极寒天气，注意保暖", "danger");
+                    break;
+                case "星夜":
+                    gameState.temperature = 10 + Math.floor(Math.random() * 10);
+                    addLog("夜空闪烁着神秘的星光...", "star");
                     break;
                 default: // 晴天
                     gameState.temperature = 22 + Math.floor(Math.random() * 10);
@@ -876,6 +958,13 @@
                 addLog(`医疗站恢复了你的部分健康`, "positive");
             }
             
+            // 星尘收集器效果
+            if (gameState.facilities["星尘收集器"].level > 0 && gameState.weather === "星夜") {
+                const stardust = 1 + Math.floor(Math.random() * 2);
+                addItem("星尘", stardust);
+                addLog(`星尘收集器收集了${stardust}个星尘`, "star");
+            }
+            
             // 随机丧尸袭击
             if (Math.random() < 0.3 - (0.05 * gameState.facilities["防御工事"].level) && gameState.day - gameState.lastAttackDay > 2) {
                 triggerZombieAttack();
@@ -911,6 +1000,14 @@
                     const damage = Math.floor(Math.random() * 3) + 1;
                     gameState.health = Math.max(0, gameState.health - damage);
                     addLog(`极寒天气使你失去了${damage}点生命值`, "danger");
+                }
+            }
+            
+            // 星夜效果
+            if (gameState.weather === "星夜") {
+                gameState.san = Math.min(gameState.maxSan, gameState.san + 5);
+                if (hasItem("星光护符")) {
+                    gameState.san = Math.min(gameState.maxSan, gameState.san + 5);
                 }
             }
         }
@@ -1011,11 +1108,47 @@
                             addLog(`击败${zombie}后发现了${rareItem}`, "positive");
                         }
                     }
+                },
+                { 
+                    msg: "发现了一颗坠落的流星！", 
+                    type: "star",
+                    chance: 0.05,
+                    condition: () => gameState.weather === "星夜",
+                    action: () => {
+                        addItem("星尘", 3 + Math.floor(Math.random() * 3));
+                        addLog("收集到了珍贵的星尘", "star");
+                    }
+                },
+                { 
+                    msg: "发现了一个神秘的天文台", 
+                    type: "star",
+                    chance: 0.1,
+                    condition: () => gameState.day > 5 && !gameState.discoveredLocations.includes("天文台"),
+                    action: () => {
+                        // 在地图上随机放置天文台
+                        const positions = [];
+                        for (let y = 0; y < 5; y++) {
+                            for (let x = 0; x < 5; x++) {
+                                if (!gameState.map[y][x]) {
+                                    positions.push({ x, y });
+                                }
+                            }
+                        }
+                        
+                        if (positions.length > 0) {
+                            const pos = positions[Math.floor(Math.random() * positions.length)];
+                            gameState.map[pos.y][pos.x] = "天文台";
+                            addLog("地图上出现了一个新的地点：天文台", "star");
+                        }
+                    }
                 }
             ];
             
             const roll = Math.random();
             for (const event of events) {
+                // 检查条件
+                if (event.condition && !event.condition()) continue;
+                
                 const chance = event.chance || 0.3;
                 if (roll < chance) {
                     addLog(event.msg, event.type);
@@ -1099,6 +1232,13 @@
                                 case "建材":
                                     addItem(Math.random() < 0.5 ? "木材" : "金属", 2 + Math.floor(Math.random() * 3));
                                     break;
+                                case "星尘":
+                                    if (gameState.weather === "星夜") {
+                                        addItem("星尘", 1 + Math.floor(Math.random() * 2));
+                                    } else {
+                                        addItem("电子零件", 1);
+                                    }
+                                    break;
                                 default:
                                     addItem("布料", 1 + Math.floor(Math.random() * 2));
                             }
@@ -1179,6 +1319,13 @@
                                         break;
                                     case "建材":
                                         addItem(Math.random() < 0.5 ? "木材" : "金属", 1);
+                                        break;
+                                    case "星尘":
+                                        if (gameState.weather === "星夜") {
+                                            addItem("星尘", 1);
+                                        } else {
+                                            addItem("电子零件", 1);
+                                        }
                                         break;
                                     default:
                                         addItem("布料", 1);
@@ -1329,9 +1476,9 @@
                 
                 // 低概率获得稀有物品
                 if (Math.random() < 0.1) {
-                    const rareLoot = ["抗生素", "镇静剂", "电子零件", "弹药"][Math.floor(Math.random() * 4)];
+                    const rareLoot = ["抗生素", "镇静剂", "电子零件", "弹药", "星尘"][Math.floor(Math.random() * 5)];
                     addItem(rareLoot, 1);
-                    addLog(`从丧尸身上找到了${rareLoot}！`, "positive");
+                    addLog(`从丧尸身上找到了${rareLoot}！`, rareLoot === "星尘" ? "star" : "positive");
                 }
             } else {
                 addLog("成功击退丧尸且未受伤", "positive");
@@ -1428,6 +1575,58 @@
         }
 
         // ======================
+        // 保存和加载功能
+        // ======================
+        function saveGame(slot = 1) {
+            try {
+                const saveData = JSON.stringify(gameState);
+                localStorage.setItem(`survival_star_save_${slot}`, saveData);
+                addLog(`游戏已保存到存档 ${slot}`, "positive");
+                return true;
+            } catch (e) {
+                addLog("保存游戏失败", "danger");
+                console.error("保存错误:", e);
+                return false;
+            }
+        }
+
+        function loadGame(slot = 1) {
+            try {
+                const saveData = localStorage.getItem(`survival_star_save_${slot}`);
+                if (!saveData) {
+                    addLog(`存档 ${slot} 不存在`, "warning");
+                    return false;
+                }
+                
+                const loadedState = JSON.parse(saveData);
+                
+                // 简单验证存档数据
+                if (!loadedState.version || !loadedState.day || !loadedState.inventory) {
+                    addLog("存档数据损坏", "danger");
+                    return false;
+                }
+                
+                // 合并加载的状态到当前游戏状态
+                Object.assign(gameState, loadedState);
+                
+                // 关闭加载模态框
+                document.getElementById("load-modal").style.display = "none";
+                
+                addLog(`从存档 ${slot} 加载游戏`, "positive");
+                updateUI();
+                return true;
+            } catch (e) {
+                addLog("加载游戏失败", "danger");
+                console.error("加载错误:", e);
+                return false;
+            }
+        }
+
+        function openLoadModal() {
+            document.getElementById("load-modal").style.display = "block";
+        }
+
+        // ======================
         // 物品和装备管理
         // ======================
         function addItem(item, quantity = 1) {
@@ -1442,6 +1641,9 @@
                         break;
                     case "铁制护甲":
                         gameState.inventory[item] = { type: "armor", count: 0, defense: 6, durability: 50 };
+                        break;
+                    case "星光护符":
+                        gameState.inventory[item] = { type: "trinket", count: 0, effect: { san: 10 } };
                         break;
                     default:
                         gameState.inventory[item] = { type: "resource", count: 0 };
@@ -1485,6 +1687,15 @@
             } else if (itemData.type === "armor") {
                 gameState.equippedArmor = item;
                 addLog(`装备了${item}`, "positive");
+                return true;
+            } else if (itemData.type === "trinket") {
+                // 饰品自动生效
+                if (itemData.effect) {
+                    if (itemData.effect.san) {
+                        gameState.san = Math.min(gameState.maxSan, gameState.san + itemData.effect.san);
+                    }
+                    addLog(`使用了${item}，效果生效`, "star");
+                }
                 return true;
             }
             
@@ -1550,6 +1761,10 @@
                     html += `</div>`;
                 }
                 
+                if (recipe.effect) {
+                    html += `<div class="recipe-effect">效果: ${recipe.effect.description || "未知"}</div>`;
+                }
+                
                 if (canCraft) {
                     html += `<button class="btn" onclick="craftItem('${recipeName}')" style="width: 100%; margin-top: 5px;">制作</button>`;
                 } else {
@@ -1584,7 +1799,7 @@
             const resultAmount = recipe.result[resultItem];
             
             addItem(resultItem, resultAmount);
-            addLog(`成功制作了${resultItem} x${resultAmount}`, "positive");
+            addLog(`成功制作了${resultItem} x${resultAmount}`, recipe.type === "trinket" ? "star" : "positive");
             
             // 关闭模态框
             document.getElementById("craft-modal").style.display = "none";
@@ -1779,6 +1994,40 @@
         }
 
         // ======================
+        // 星烁特效
+        // ======================
+        function createStarParticles() {
+            // 清除现有的粒子
+            document.querySelectorAll('.star-particle').forEach(el => el.remove());
+            
+            // 创建新的粒子
+            const particleCount = 10 + Math.floor(Math.random() * 10);
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'star-particle';
+                
+                // 随机位置
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                const size = 1 + Math.random() * 2;
+                const duration = 1 + Math.random() * 2;
+                
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.animationDuration = `${duration}s`;
+                
+                document.body.appendChild(particle);
+                
+                // 粒子消失
+                setTimeout(() => {
+                    particle.remove();
+                }, duration * 1000);
+            }
+        }
+
+        // ======================
         // UI更新和初始化
         // ======================
         function updateUI() {
@@ -1860,7 +2109,7 @@
                             treat();
                         }
                     });
-                } else if (itemData.type === "weapon" || itemData.type === "armor") {
+                } else if (itemData.type === "weapon" || itemData.type === "armor" || itemData.type === "trinket") {
                     itemElement.addEventListener("click", () => {
                         equipItem(itemName);
                     });
@@ -1876,6 +2125,9 @@
                         break;
                     case "resource":
                         resourcesContainer.appendChild(itemElement.cloneNode(true));
+                        break;
+                    case "trinket":
+                        itemsContainer.appendChild(itemElement);
                         break;
                     default:
                         itemsContainer.appendChild(itemElement);
@@ -1915,6 +2167,14 @@
                 }
                 
                 container.appendChild(infectionEffect);
+            }
+            
+            // 星光护符效果
+            if (hasItem("星光护符")) {
+                const starEffect = document.createElement("div");
+                starEffect.className = "status-effect effect-star";
+                starEffect.textContent = "星光护符 +SAN值";
+                container.appendChild(starEffect);
             }
             
             // 其他状态效果
@@ -2016,6 +2276,8 @@
             document.getElementById("btn-build").addEventListener("click", build);
             document.getElementById("btn-skills").addEventListener("click", showSkills);
             document.getElementById("btn-treat").addEventListener("click", treat);
+            document.getElementById("btn-save").addEventListener("click", () => saveGame(1));
+            document.getElementById("btn-load").addEventListener("click", openLoadModal);
             
             // 关闭模态框按钮
             document.getElementById("btn-close-craft").addEventListener("click", () => {
@@ -2028,6 +2290,10 @@
             
             document.getElementById("btn-close-skills").addEventListener("click", () => {
                 document.getElementById("skills-modal").style.display = "none";
+            });
+            
+            document.getElementById("btn-close-load").addEventListener("click", () => {
+                document.getElementById("load-modal").style.display = "none";
             });
             
             // 标签页切换
@@ -2057,10 +2323,18 @@
             
             updateUI();
             addLog("游戏开始，努力在丧尸末日中生存下去！", "info");
+            addLog("天空中闪烁着不寻常的星光...", "star");
         }
 
         // 启动游戏
         window.onload = initGame;
+        
+        // 全局函数
+        window.craftItem = craftItem;
+        window.upgradeFacility = upgradeFacility;
+        window.learnSkill = learnSkill;
+        window.travel = travel;
+        window.loadGame = loadGame;
     </script>
 </body>
 </html>
