@@ -1,9 +1,2066 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
-    <title>我的网站</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>末日求生：星烁游戏</title>
+    <style>
+        :root {
+            --danger-color: #c33;
+            --warning-color: #cc3;
+            --safe-color: #3c3;
+            --primary-color: #55f;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #111;
+            color: #eee;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 10px;
+            touch-action: manipulation;
+            background-image: radial-gradient(#222 1px, transparent 1px);
+            background-size: 15px 15px;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-areas:
+                "header header"
+                "stats stats"
+                "main main"
+                "map actions"
+                "inventory inventory"
+                "log log";
+            gap: 10px;
+        }
+        
+        .header {
+            grid-area: header;
+            text-align: center;
+            border-bottom: 2px solid var(--danger-color);
+            padding-bottom: 5px;
+            position: relative;
+        }
+        
+        .weather-icon {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 24px;
+        }
+        
+        .stats {
+            grid-area: stats;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background-color: #222;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+        
+        .stat {
+            margin: 5px;
+        }
+        
+        .stat-name {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+        }
+        
+        .health { color: var(--danger-color); }
+        .hunger { color: var(--warning-color); }
+        .energy { color: var(--safe-color); }
+        .infection { color: #c3c; }
+        .temperature { color: #3cf; }
+        .san { color: #99f; }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #333;
+            border-radius: 4px;
+            margin-top: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+        
+        .main-area {
+            grid-area: main;
+            background-color: #222;
+            padding: 15px;
+            border-radius: 5px;
+            min-height: 100px;
+            border: 1px solid #333;
+            position: relative;
+        }
+        
+        .location-tag {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #333;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .action-buttons {
+            grid-area: actions;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .map-container {
+            grid-area: map;
+            background-color: #222;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+        
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+        }
+        
+        .map-tile {
+            aspect-ratio: 1;
+            background-color: #333;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .map-tile:active {
+            transform: scale(0.95);
+        }
+        
+        .map-tile.current {
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+        
+        .map-tile.discovered {
+            background-color: #444;
+        }
+        
+        .map-tile.undiscovered {
+            background-color: #222;
+            color: #666;
+        }
+        
+        .btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            border: 1px solid #444;
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+            background-color: var(--primary-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: #333;
+        }
+        
+        .btn-disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .inventory {
+            grid-area: inventory;
+            background-color: #222;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+        
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .item {
+            background-color: #333;
+            padding: 8px;
+            border-radius: 3px;
+            border: 1px solid #444;
+            font-size: 13px;
+            text-align: center;
+        }
+        
+        .item-count {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .event-log {
+            grid-area: log;
+            height: 150px;
+            overflow-y: auto;
+            background-color: #222;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            font-size: 13px;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+            line-height: 1.4;
+        }
+        
+        .log-entry.warning {
+            color: var(--warning-color);
+        }
+        
+        .log-entry.danger {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+        
+        .log-entry.positive {
+            color: var(--safe-color);
+        }
+        
+        .log-entry.info {
+            color: #99f;
+        }
+        
+        /* 标签页样式 */
+        .tabs {
+            display: flex;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .tab {
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .tab.active {
+            background-color: #333;
+            border: 1px solid #444;
+            border-bottom: none;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 技能树样式 */
+        .skill-tree {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .skill {
+            background-color: #333;
+            padding: 8px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 12px;
+            border: 1px solid #444;
+            cursor: pointer;
+        }
+        
+        .skill.learned {
+            border-color: var(--safe-color);
+            background-color: #334;
+        }
+        
+        .skill.available {
+            border-color: var(--primary-color);
+        }
+        
+        .skill.unavailable {
+            opacity: 0.5;
+        }
+        
+        /* 基地建设样式 */
+        .facilities {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .facility {
+            background-color: #333;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 12px;
+            border: 1px solid #444;
+        }
+        
+        .facility-level {
+            color: var(--warning-color);
+            font-weight: bold;
+        }
+        
+        /* 制作面板样式 */
+        .recipes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .recipe {
+            background-color: #333;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 12px;
+            border: 1px solid #444;
+        }
+        
+        .recipe-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .recipe-materials {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+        
+        /* 状态效果样式 */
+        .status-effects {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .status-effect {
+            background-color: #333;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            border: 1px solid #444;
+        }
+        
+        .effect-buff {
+            border-color: var(--safe-color);
+        }
+        
+        .effect-debuff {
+            border-color: var(--danger-color);
+        }
+        
+        /* 移动端优化 */
+        @media (max-width: 500px) {
+            .container {
+                grid-template-areas:
+                    "header"
+                    "stats"
+                    "main"
+                    "map"
+                    "actions"
+                    "inventory"
+                    "log";
+            }
+            
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Hello GitHub Pages!</h1>
+    <div class="container">
+        <div class="header">
+            <h1>末日求生：星烁游戏</h1>
+            <div>第 <span id="day">1</span> 天 <span id="time">早晨</span> <span id="weather">☀️</span></div>
+            <div class="weather-icon" id="temperature">🌡️ 22°C</div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-name">
+                    <span>❤️ 生命值</span>
+                    <span class="stat-value health" id="health">100/100</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill health" id="health-bar"></div>
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-name">
+                    <span>🍖 饥饿度</span>
+                    <span class="stat-value hunger" id="hunger">80/100</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill hunger" id="hunger-bar"></div>
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-name">
+                    <span>⚡ 精力</span>
+                    <span class="stat-value energy" id="energy">100/100</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill energy" id="energy-bar"></div>
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-name">
+                    <span>☣️ 感染度</span>
+                    <span class="stat-value infection" id="infection">0/100</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill infection" id="infection-bar"></div>
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-name">
+                    <span>🧠 SAN值</span>
+                    <span class="stat-value san" id="san">80/100</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill san" id="san-bar"></div>
+                </div>
+            </div>
+            <div class="stat">
+                <div class="stat-name">
+                    <span>🛡️ 防御</span>
+                    <span class="stat-value" id="defense">5</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-area">
+            <div class="location-tag" id="location-tag">避难所</div>
+            <div id="location-description">你在一间破旧的避难所中醒来，窗外传来低沉的嘶吼声...</div>
+            <div id="event-display"></div>
+            
+            <div class="status-effects" id="status-effects">
+                <div class="status-effect effect-buff">庇护所 +5防御</div>
+            </div>
+        </div>
+        
+        <div class="map-container">
+            <h3>区域地图</h3>
+            <div class="map-grid" id="map-grid">
+                <!-- 地图格子将由JS动态生成 -->
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="btn" id="btn-explore">🔍 探索</button>
+            <button class="btn" id="btn-scavenge">🧺 搜刮</button>
+            <button class="btn" id="btn-rest">💤 休息</button>
+            <button class="btn" id="btn-eat">🍽️ 进食</button>
+            <button class="btn btn-danger" id="btn-fight">⚔️ 战斗</button>
+            <button class="btn" id="btn-craft">🛠️ 制作</button>
+            <button class="btn" id="btn-build">🏗️ 建造</button>
+            <button class="btn" id="btn-skills">📚 技能</button>
+            <button class="btn btn-primary" id="btn-next">⏭️ 下一时段</button>
+            <button class="btn" id="btn-treat">💉 治疗</button>
+        </div>
+        
+        <div class="inventory">
+            <div class="tabs">
+                <div class="tab active" data-tab="items">物品</div>
+                <div class="tab" data-tab="weapons">武器</div>
+                <div class="tab" data-tab="armor">护甲</div>
+                <div class="tab" data-tab="resources">资源</div>
+            </div>
+            
+            <div class="tab-content active" id="tab-items">
+                <div class="inventory-grid" id="inventory-items">
+                    <!-- 物品将由JS动态生成 -->
+                </div>
+            </div>
+            
+            <div class="tab-content" id="tab-weapons">
+                <div class="inventory-grid" id="inventory-weapons">
+                    <!-- 武器将由JS动态生成 -->
+                </div>
+            </div>
+            
+            <div class="tab-content" id="tab-armor">
+                <div class="inventory-grid" id="inventory-armor">
+                    <!-- 护甲将由JS动态生成 -->
+                </div>
+            </div>
+            
+            <div class="tab-content" id="tab-resources">
+                <div class="inventory-grid" id="inventory-resources">
+                    <!-- 资源将由JS动态生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="event-log">
+            <h3>事件日志</h3>
+            <div id="log-entries">
+                <div class="log-entry">[早晨] 你从不安的睡眠中醒来</div>
+                <div class="log-entry">[早晨] 听到远处有玻璃破碎的声音</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="craft-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 100; padding: 20px; box-sizing: border-box; overflow-y: auto;">
+        <div style="background-color: #222; max-width: 500px; margin: 20px auto; padding: 20px; border-radius: 5px; border: 1px solid #333;">
+            <h2 style="margin-top: 0;">制作物品</h2>
+            <div id="craft-recipes" style="display: grid; gap: 10px;">
+                <!-- 配方将由JS动态生成 -->
+            </div>
+            <button id="btn-close-craft" style="margin-top: 20px; padding: 10px 20px; background-color: var(--danger-color); color: white; border: none; border-radius: 5px; cursor: pointer;">关闭</button>
+        </div>
+    </div>
+
+    <div id="build-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 100; padding: 20px; box-sizing: border-box; overflow-y: auto;">
+        <div style="background-color: #222; max-width: 500px; margin: 20px auto; padding: 20px; border-radius: 5px; border: 1px solid #333;">
+            <h2 style="margin-top: 0;">建造设施</h2>
+            <div id="build-options" style="display: grid; gap: 10px;">
+                <!-- 建造选项将由JS动态生成 -->
+            </div>
+            <button id="btn-close-build" style="margin-top: 20px; padding: 10px 20px; background-color: var(--danger-color); color: white; border: none; border-radius: 5px; cursor: pointer;">关闭</button>
+        </div>
+    </div>
+
+    <div id="skills-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 100; padding: 20px; box-sizing: border-box; overflow-y: auto;">
+        <div style="background-color: #222; max-width: 500px; margin: 20px auto; padding: 20px; border-radius: 5px; border: 1px solid #333;">
+            <h2 style="margin-top: 0;">技能树</h2>
+            <div style="margin-bottom: 15px;">
+                <span>技能点: </span>
+                <span id="skill-points" style="font-weight: bold; color: var(--primary-color);">0</span>
+            </div>
+            <div id="skill-trees" style="display: grid; gap: 20px;">
+                <!-- 技能树将由JS动态生成 -->
+            </div>
+            <button id="btn-close-skills" style="margin-top: 20px; padding: 10px 20px; background-color: var(--danger-color); color: white; border: none; border-radius: 5px; cursor: pointer;">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        // ======================
+        // 游戏状态和数据
+        // ======================
+        const gameState = {
+            day: 1,
+            time: 0, // 0-早晨, 1-中午, 2-傍晚, 3-夜晚
+            times: ["早晨", "中午", "傍晚", "夜晚"],
+            health: 100,
+            maxHealth: 100,
+            hunger: 80,
+            maxHunger: 100,
+            energy: 100,
+            maxEnergy: 100,
+            infection: 0,
+            maxInfection: 100,
+            san: 80,
+            maxSan: 100,
+            defense: 5,
+            skillPoints: 0,
+            temperature: 22,
+            weather: "晴天",
+            weathers: ["晴天", "雨天", "雾天", "暴风雨", "极寒"],
+            weatherIcons: ["☀️", "🌧️", "🌫️", "⛈️", "❄️"],
+            location: "避难所",
+            locations: {
+                "避难所": { description: "你的临时庇护所，相对安全", danger: 1, resources: [] },
+                "废弃超市": { description: "货架上可能还有剩余的食物", danger: 3, resources: ["食物", "日用品"] },
+                "加油站": { description: "可能有燃料和工具", danger: 4, resources: ["燃料", "工具"] },
+                "医院": { description: "医疗物资丰富但极其危险", danger: 5, resources: ["医疗"] },
+                "警察局": { description: "武器和防具的来源", danger: 4, resources: ["武器"] },
+                "居民区": { description: "普通住宅，可能有基本物资", danger: 2, resources: ["食物", "日用品"] },
+                "学校": { description: "可能有书籍和简单工具", danger: 3, resources: ["知识"] },
+                "建筑工地": { description: "建筑材料丰富", danger: 3, resources: ["建材"] },
+                "军事哨所": { description: "高级武器但危险极高", danger: 6, resources: ["武器", "弹药"] }
+            },
+            currentPosition: { x: 2, y: 2 }, // 地图中心位置
+            discoveredLocations: ["避难所"],
+            map: Array(5).fill().map(() => Array(5).fill(null)),
+            inventory: {
+                // 消耗品
+                "罐头": { type: "food", count: 3, effect: { hunger: 30 } },
+                "瓶装水": { type: "food", count: 2, effect: { hunger: 10 } },
+                "绷带": { type: "medical", count: 2, effect: { health: 20 } },
+                "抗生素": { type: "medical", count: 1, effect: { infection: -30 } },
+                "镇静剂": { type: "medical", count: 0, effect: { san: 20 } },
+                
+                // 武器
+                "小刀": { type: "weapon", count: 1, damage: 10, durability: 50 },
+                "棒球棍": { type: "weapon", count: 0, damage: 15, durability: 30 },
+                "手枪": { type: "weapon", count: 0, damage: 25, ammo: 0, maxAmmo: 12, durability: 100 },
+                
+                // 护甲
+                "皮夹克": { type: "armor", count: 0, defense: 3, durability: 40 },
+                "警用防弹衣": { type: "armor", count: 0, defense: 8, durability: 60 },
+                
+                // 资源
+                "木材": { type: "resource", count: 5 },
+                "金属": { type: "resource", count: 2 },
+                "布料": { type: "resource", count: 3 },
+                "电子零件": { type: "resource", count: 0 },
+                "弹药": { type: "resource", count: 0 },
+                "燃料": { type: "resource", count: 0 }
+            },
+            equippedWeapon: null,
+            equippedArmor: null,
+            statusEffects: [
+                { name: "庇护所", type: "buff", description: "基础防御+5", duration: Infinity }
+            ],
+            facilities: {
+                "工作台": { level: 1, maxLevel: 3, description: "解锁更多制作配方", requirements: { "木材": 10, "金属": 5 } },
+                "雨水收集器": { level: 0, maxLevel: 2, description: "每天提供净水", requirements: { "木材": 5, "布料": 3 } },
+                "菜园": { level: 0, maxLevel: 3, description: "每天提供食物", requirements: { "木材": 8 } },
+                "防御工事": { level: 0, maxLevel: 3, description: "减少被袭击几率", requirements: { "木材": 15, "金属": 10 } },
+                "医疗站": { level: 0, maxLevel: 2, description: "缓慢恢复健康", requirements: { "电子零件": 2, "布料": 5 } }
+            },
+            recipes: {
+                "简易绷带": { type: "medical", materials: { "布料": 2 }, result: { "绷带": 1 } },
+                "木制长矛": { type: "weapon", materials: { "木材": 3 }, result: { "木制长矛": 1 }, requires: { "工作台": 1 } },
+                "简易陷阱": { type: "tool", materials: { "木材": 2, "金属": 1 }, result: { "简易陷阱": 1 }, requires: { "工作台": 1 } },
+                "子弹": { type: "ammo", materials: { "金属": 1 }, result: { "弹药": 5 }, requires: { "工作台": 2 } },
+                "铁制护甲": { type: "armor", materials: { "金属": 5, "布料": 3 }, result: { "铁制护甲": 1 }, requires: { "工作台": 2 } }
+            },
+            skills: {
+                "生存专家": { 
+                    description: "减少20%食物和水消耗", 
+                    cost: 1, 
+                    learned: false, 
+                    requirements: [], 
+                    effect: () => { gameState.foodConsumptionRate = 0.8; } 
+                },
+                "熟练战士": { 
+                    description: "近战伤害+30%", 
+                    cost: 1, 
+                    learned: false, 
+                    requirements: [], 
+                    effect: () => { gameState.meleeDamageBonus = 1.3; } 
+                },
+                "神射手": { 
+                    description: "远程武器伤害+25%", 
+                    cost: 1, 
+                    learned: false, 
+                    requirements: [], 
+                    effect: () => { gameState.rangedDamageBonus = 1.25; } 
+                },
+                "医疗知识": { 
+                    description: "治疗效果+40%", 
+                    cost: 1, 
+                    learned: false, 
+                    requirements: [], 
+                    effect: () => { gameState.healingBonus = 1.4; } 
+                },
+                "工程师": { 
+                    description: "解锁高级制作配方", 
+                    cost: 2, 
+                    learned: false, 
+                    requirements: [], 
+                    effect: () => { gameState.engineerUnlocked = true; } 
+                },
+                "钢筋铁骨": { 
+                    description: "最大生命值+20", 
+                    cost: 2, 
+                    learned: false, 
+                    requirements: ["熟练战士"], 
+                    effect: () => { gameState.maxHealth += 20; gameState.health += 20; } 
+                }
+            },
+            events: [],
+            lastAttackDay: 0,
+            zombieHordeSize: 0,
+            foodConsumptionRate: 1.0,
+            meleeDamageBonus: 1.0,
+            rangedDamageBonus: 1.0,
+            healingBonus: 1.0,
+            engineerUnlocked: false
+        };
+
+        // 缓存DOM元素
+        const elements = {
+            day: document.getElementById("day"),
+            time: document.getElementById("time"),
+            weather: document.getElementById("weather"),
+            temperature: document.getElementById("temperature"),
+            "location-tag": document.getElementById("location-tag"),
+            "location-description": document.getElementById("location-description"),
+            health: document.getElementById("health"),
+            hunger: document.getElementById("hunger"),
+            energy: document.getElementById("energy"),
+            infection: document.getElementById("infection"),
+            san: document.getElementById("san"),
+            defense: document.getElementById("defense"),
+            "health-bar": document.getElementById("health-bar"),
+            "hunger-bar": document.getElementById("hunger-bar"),
+            "energy-bar": document.getElementById("energy-bar"),
+            "infection-bar": document.getElementById("infection-bar"),
+            "san-bar": document.getElementById("san-bar"),
+            "log-entries": document.getElementById("log-entries"),
+            "map-grid": document.getElementById("map-grid"),
+            "inventory-items": document.getElementById("inventory-items"),
+            "inventory-weapons": document.getElementById("inventory-weapons"),
+            "inventory-armor": document.getElementById("inventory-armor"),
+            "inventory-resources": document.getElementById("inventory-resources"),
+            "status-effects": document.getElementById("status-effects")
+        };
+
+        // 初始化地图
+        function initializeMap() {
+            const locationNames = Object.keys(gameState.locations).filter(name => name !== "避难所");
+            
+            // 确保避难所在中心
+            gameState.map[2][2] = "避难所";
+            
+            // 随机放置其他地点
+            const positions = [];
+            for (let y = 0; y < 5; y++) {
+                for (let x = 0; x < 5; x++) {
+                    if (x !== 2 || y !== 2) {
+                        positions.push({ x, y });
+                    }
+                }
+            }
+            
+            // 随机打乱位置
+            positions.sort(() => Math.random() - 0.5);
+            
+            // 放置地点
+            for (let i = 0; i < Math.min(locationNames.length, positions.length); i++) {
+                const pos = positions[i];
+                gameState.map[pos.y][pos.x] = locationNames[i];
+            }
+        }
+
+        // ======================
+        // 游戏核心功能
+        // ======================
+        function nextTime() {
+            gameState.time = (gameState.time + 1) % 4;
+            if (gameState.time === 0) {
+                gameState.day++;
+                
+                // 每天开始时获得技能点
+                if (gameState.day % 3 === 0) {
+                    gameState.skillPoints++;
+                    addLog("获得1点技能点", "positive");
+                }
+                
+                // 随机天气变化
+                changeWeather();
+                
+                // 每日状态更新
+                dailyUpdate();
+            }
+            
+            updateTimeEffects();
+            processStatusEffects();
+            triggerRandomEvent();
+            updateUI();
+        }
+
+        function changeWeather() {
+            const weatherIndex = Math.floor(Math.random() * gameState.weathers.length);
+            gameState.weather = gameState.weathers[weatherIndex];
+            
+            // 天气效果
+            switch (gameState.weather) {
+                case "雨天":
+                    gameState.temperature = 15 + Math.floor(Math.random() * 5);
+                    addLog("开始下雨了，温度下降", "info");
+                    break;
+                case "雾天":
+                    gameState.temperature = 18 + Math.floor(Math.random() * 5);
+                    addLog("浓雾笼罩，能见度降低", "warning");
+                    break;
+                case "暴风雨":
+                    gameState.temperature = 12 + Math.floor(Math.random() * 5);
+                    addLog("暴风雨来袭，外出更加危险", "danger");
+                    break;
+                case "极寒":
+                    gameState.temperature = -10 + Math.floor(Math.random() * 5);
+                    addLog("极寒天气，注意保暖", "danger");
+                    break;
+                default: // 晴天
+                    gameState.temperature = 22 + Math.floor(Math.random() * 10);
+            }
+        }
+
+        function dailyUpdate() {
+            // 饥饿和口渴
+            const hungerLoss = Math.floor(15 * gameState.foodConsumptionRate);
+            gameState.hunger = Math.max(0, gameState.hunger - hungerLoss);
+            
+            if (gameState.hunger <= 0) {
+                gameState.health = Math.max(0, gameState.health - 10);
+                addLog("饥饿使你变得虚弱", "danger");
+            }
+            
+            // 感染进展
+            if (gameState.infection > 0) {
+                gameState.infection = Math.min(100, gameState.infection + 5);
+                if (gameState.infection >= 100) {
+                    gameState.health = 0;
+                    addLog("感染已经扩散到全身...游戏结束", "danger");
+                } else if (gameState.infection >= 70) {
+                    gameState.health = Math.max(0, gameState.health - 5);
+                    addLog("感染正在恶化，你感到非常不适", "danger");
+                }
+            }
+            
+            // SAN值恢复
+            if (gameState.location === "避难所") {
+                gameState.san = Math.min(gameState.maxSan, gameState.san + 5);
+            }
+            
+            // 设施效果
+            if (gameState.facilities["雨水收集器"].level > 0) {
+                addItem("瓶装水", gameState.facilities["雨水收集器"].level);
+                addLog(`雨水收集器提供了${gameState.facilities["雨水收集器"].level}瓶水`, "positive");
+            }
+            
+            if (gameState.facilities["菜园"].level > 0) {
+                addItem("罐头", gameState.facilities["菜园"].level);
+                addLog(`菜园收获了${gameState.facilities["菜园"].level}个罐头`, "positive");
+            }
+            
+            if (gameState.facilities["医疗站"].level > 0) {
+                gameState.health = Math.min(gameState.maxHealth, gameState.health + (5 * gameState.facilities["医疗站"].level));
+                if (gameState.infection > 0) {
+                    gameState.infection = Math.max(0, gameState.infection - (2 * gameState.facilities["医疗站"].level));
+                }
+                addLog(`医疗站恢复了你的部分健康`, "positive");
+            }
+            
+            // 随机丧尸袭击
+            if (Math.random() < 0.3 - (0.05 * gameState.facilities["防御工事"].level) && gameState.day - gameState.lastAttackDay > 2) {
+                triggerZombieAttack();
+            }
+        }
+
+        function updateTimeEffects() {
+            // 夜晚恢复更多精力但SAN值下降
+            if (gameState.time === 3) {
+                gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + 40);
+                gameState.san = Math.max(0, gameState.san - 5);
+            } else {
+                gameState.energy = Math.max(0, gameState.energy - 10);
+            }
+            
+            // 中午温度最高
+            if (gameState.time === 1) {
+                if (gameState.weather === "晴天") {
+                    gameState.temperature += 5;
+                }
+            }
+            
+            // 夜晚温度最低
+            if (gameState.time === 3) {
+                if (gameState.weather !== "极寒") {
+                    gameState.temperature -= 5;
+                }
+            }
+            
+            // 极寒天气伤害
+            if (gameState.weather === "极寒" && gameState.temperature < -5) {
+                if (!hasStatusEffect("保暖衣物")) {
+                    const damage = Math.floor(Math.random() * 3) + 1;
+                    gameState.health = Math.max(0, gameState.health - damage);
+                    addLog(`极寒天气使你失去了${damage}点生命值`, "danger");
+                }
+            }
+        }
+
+        function processStatusEffects() {
+            // 处理有限持续时间的状态效果
+            gameState.statusEffects = gameState.statusEffects.filter(effect => {
+                if (effect.duration !== Infinity) {
+                    effect.duration--;
+                    return effect.duration > 0;
+                }
+                return true;
+            });
+        }
+
+        function triggerRandomEvent() {
+            const events = [
+                { 
+                    msg: "你听到远处有尖叫声", 
+                    type: "info",
+                    action: () => {} 
+                },
+                { 
+                    msg: "一群丧尸从附近经过", 
+                    type: "warning",
+                    action: () => {
+                        if (Math.random() < 0.3) {
+                            addLog("丧尸发现了你！", "danger");
+                            fight();
+                        }
+                    } 
+                },
+                { 
+                    msg: "找到了一些物资", 
+                    type: "positive",
+                    action: () => {
+                        const items = ["罐头", "瓶装水", "绷带", "木材", "金属"];
+                        const foundItem = items[Math.floor(Math.random() * items.length)];
+                        addItem(foundItem, Math.floor(Math.random() * 3) + 1);
+                    }
+                },
+                { 
+                    msg: "被丧尸抓伤了！", 
+                    type: "danger",
+                    action: () => {
+                        const damage = 15 + Math.floor(Math.random() * 10);
+                        gameState.health -= damage;
+                        gameState.infection += 20;
+                        gameState.san = Math.max(0, gameState.san - 10);
+                        addLog(`受到${damage}点伤害并被感染`, "danger");
+                    }
+                },
+                { 
+                    msg: "发现一个废弃的背包", 
+                    type: "positive",
+                    action: () => {
+                        addItem("绷带", 1);
+                        addItem("罐头", 2);
+                        if (Math.random() < 0.3) {
+                            addItem("手枪", 1);
+                            addLog("背包里有一把手枪！", "positive");
+                        }
+                    }
+                },
+                { 
+                    msg: "遭遇了特殊感染者！", 
+                    type: "danger",
+                    chance: 0.1,
+                    action: () => {
+                        const specialZombies = ["尖叫者", "装甲丧尸", "呕吐者", "快速感染者"];
+                        const zombie = specialZombies[Math.floor(Math.random() * specialZombies.length)];
+                        
+                        let damage = 25;
+                        let infection = 30;
+                        
+                        switch (zombie) {
+                            case "装甲丧尸":
+                                damage = 15;
+                                infection = 10;
+                                break;
+                            case "快速感染者":
+                                damage = 20;
+                                infection = 40;
+                                break;
+                        }
+                        
+                        gameState.health -= damage;
+                        gameState.infection += infection;
+                        gameState.san = Math.max(0, gameState.san - 15);
+                        
+                        addLog(`遭遇了${zombie}！受到${damage}点伤害`, "danger");
+                        
+                        // 特殊感染者有额外掉落
+                        if (Math.random() < 0.5) {
+                            const rareItems = ["抗生素", "镇静剂", "电子零件", "弹药"];
+                            const rareItem = rareItems[Math.floor(Math.random() * rareItems.length)];
+                            addItem(rareItem, 1);
+                            addLog(`击败${zombie}后发现了${rareItem}`, "positive");
+                        }
+                    }
+                }
+            ];
+            
+            const roll = Math.random();
+            for (const event of events) {
+                const chance = event.chance || 0.3;
+                if (roll < chance) {
+                    addLog(event.msg, event.type);
+                    event.action();
+                    break;
+                }
+            }
+        }
+
+        function triggerZombieAttack() {
+            gameState.lastAttackDay = gameState.day;
+            gameState.zombieHordeSize = 3 + Math.floor(Math.random() * 5) + Math.floor(gameState.day / 5);
+            
+            // 防御工事减少丧尸数量
+            gameState.zombieHordeSize = Math.max(1, gameState.zombieHordeSize - gameState.facilities["防御工事"].level);
+            
+            addLog(`一群丧尸(${gameState.zombieHordeSize}只)袭击了你的避难所！`, "danger");
+            
+            let defenseBonus = gameState.defense;
+            if (gameState.equippedArmor) {
+                defenseBonus += gameState.inventory[gameState.equippedArmor].defense;
+            }
+            
+            // 战斗计算
+            let damageTaken = Math.max(0, Math.floor(gameState.zombieHordeSize * 5 / (1 + defenseBonus / 10)));
+            gameState.health -= damageTaken;
+            
+            if (gameState.health <= 0) {
+                addLog("丧尸攻破了你的防御...游戏结束", "danger");
+            } else {
+                // 击退丧尸可能获得资源
+                if (Math.random() < 0.5) {
+                    const loot = ["木材", "金属", "布料"][Math.floor(Math.random() * 3)];
+                    const amount = 1 + Math.floor(Math.random() * 3);
+                    addItem(loot, amount);
+                    addLog(`击退丧尸后找到了${amount}个${loot}`, "positive");
+                }
+                
+                addLog(`击退了丧尸群，但受到${damageTaken}点伤害`, damageTaken > 10 ? "danger" : "warning");
+            }
+        }
+
+        // ======================
+        // 玩家行动
+        // ======================
+        function explore() {
+            if (gameState.energy < 20) {
+                addLog("太累了，无法探索", "warning");
+                return;
+            }
+            
+            gameState.energy -= 20;
+            
+            const outcomes = [
+                { 
+                    msg: "探索了周围区域，但什么也没找到", 
+                    chance: 0.3 
+                },
+                { 
+                    msg: "发现了一些有用的物资", 
+                    chance: 0.4, 
+                    action: () => {
+                        const resources = gameState.locations[gameState.location].resources;
+                        if (resources.length > 0) {
+                            const resourceType = resources[Math.floor(Math.random() * resources.length)];
+                            
+                            switch (resourceType) {
+                                case "食物":
+                                    addItem(Math.random() < 0.7 ? "罐头" : "瓶装水", 1 + Math.floor(Math.random() * 2));
+                                    break;
+                                case "医疗":
+                                    addItem(Math.random() < 0.5 ? "绷带" : "抗生素", 1);
+                                    break;
+                                case "武器":
+                                    if (Math.random() < 0.3) {
+                                        addItem("手枪", 1);
+                                    } else {
+                                        addItem("棒球棍", 1);
+                                    }
+                                    break;
+                                case "建材":
+                                    addItem(Math.random() < 0.5 ? "木材" : "金属", 2 + Math.floor(Math.random() * 3));
+                                    break;
+                                default:
+                                    addItem("布料", 1 + Math.floor(Math.random() * 2));
+                            }
+                        } else {
+                            addItem(["木材", "金属", "布料"][Math.floor(Math.random() * 3)], 1 + Math.floor(Math.random() * 2));
+                        }
+                    }
+                },
+                { 
+                    msg: "遭遇了丧尸！", 
+                    chance: 0.3, 
+                    action: () => fight()
+                }
+            ];
+            
+            const roll = Math.random();
+            let cumulativeChance = 0;
+            for (const outcome of outcomes) {
+                cumulativeChance += outcome.chance;
+                if (roll <= cumulativeChance) {
+                    addLog(outcome.msg, outcome.type || "info");
+                    if (outcome.action) outcome.action();
+                    break;
+                }
+            }
+            
+            // 探索降低SAN值
+            if (gameState.location !== "避难所") {
+                gameState.san = Math.max(0, gameState.san - 5);
+            }
+            
+            updateUI();
+        }
+
+        function scavenge() {
+            if (gameState.energy < 15) {
+                addLog("太累了，无法搜刮", "warning");
+                return;
+            }
+            
+            if (gameState.location === "避难所") {
+                addLog("这里没有更多物资了", "info");
+                return;
+            }
+            
+            gameState.energy -= 15;
+            
+            // 搜刮有更高几率找到物资但也更危险
+            const outcomes = [
+                { 
+                    msg: "仔细搜刮但没有发现任何东西", 
+                    chance: 0.2 
+                },
+                { 
+                    msg: "找到了一些物资", 
+                    chance: 0.5, 
+                    action: () => {
+                        const resources = gameState.locations[gameState.location].resources;
+                        let itemCount = 0;
+                        
+                        for (let i = 0; i < 3; i++) {
+                            if (resources.length > 0 && Math.random() < 0.7) {
+                                const resourceType = resources[Math.floor(Math.random() * resources.length)];
+                                
+                                switch (resourceType) {
+                                    case "食物":
+                                        addItem(Math.random() < 0.7 ? "罐头" : "瓶装水", 1);
+                                        break;
+                                    case "医疗":
+                                        addItem(Math.random() < 0.5 ? "绷带" : "抗生素", 1);
+                                        break;
+                                    case "武器":
+                                        if (Math.random() < 0.2) {
+                                            addItem("手枪", 1);
+                                        } else {
+                                            addItem("棒球棍", 1);
+                                        }
+                                        break;
+                                    case "建材":
+                                        addItem(Math.random() < 0.5 ? "木材" : "金属", 1);
+                                        break;
+                                    default:
+                                        addItem("布料", 1);
+                                }
+                                itemCount++;
+                            }
+                        }
+                        
+                        if (itemCount === 0) {
+                            addItem(["木材", "金属", "布料"][Math.floor(Math.random() * 3)], 1);
+                        }
+                    }
+                },
+                { 
+                    msg: "搜刮时惊动了丧尸！", 
+                    chance: 0.3, 
+                    action: () => {
+                        // 搜刮遭遇战更危险
+                        gameState.health -= 5;
+                        addLog("搜刮声音引来了更多丧尸", "danger");
+                        fight();
+                    }
+                }
+            ];
+            
+            const roll = Math.random();
+            let cumulativeChance = 0;
+            for (const outcome of outcomes) {
+                cumulativeChance += outcome.chance;
+                if (roll <= cumulativeChance) {
+                    addLog(outcome.msg, outcome.type || "info");
+                    if (outcome.action) outcome.action();
+                    break;
+                }
+            }
+            
+            // 搜刮大幅降低SAN值
+            gameState.san = Math.max(0, gameState.san - 10);
+            updateUI();
+        }
+
+        function rest() {
+            if (gameState.location !== "避难所") {
+                addLog("只有避难所才能安全休息", "warning");
+                return;
+            }
+            
+            const healthRecovered = Math.min(20, gameState.maxHealth - gameState.health);
+            gameState.health += healthRecovered;
+            gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + 30);
+            gameState.san = Math.min(gameState.maxSan, gameState.san + 5);
+            
+            addLog(`休息恢复了 ${healthRecovered} 点生命值和 30 点精力`, "positive");
+            updateUI();
+        }
+
+        function eat() {
+            if (useItem("罐头", 1)) {
+                gameState.hunger = Math.min(gameState.maxHunger, gameState.hunger + 30);
+                addLog("吃了一个罐头，不那么饿了", "positive");
+            } else if (useItem("瓶装水", 1)) {
+                gameState.hunger = Math.min(gameState.maxHunger, gameState.hunger + 10);
+                addLog("喝了一瓶水，稍微缓解了饥渴", "info");
+            } else {
+                addLog("没有食物可吃", "warning");
+            }
+            updateUI();
+        }
+
+        function fight() {
+            if (gameState.energy < 15) {
+                addLog("太累了，无法有效战斗", "warning");
+                return;
+            }
+            
+            gameState.energy -= 15;
+            
+            let baseDamage = 10;
+            if (gameState.equippedWeapon) {
+                const weapon = gameState.inventory[gameState.equippedWeapon];
+                baseDamage = weapon.damage;
+                
+                // 武器耐久损耗
+                weapon.durability = Math.max(0, weapon.durability - 5);
+                if (weapon.durability <= 0) {
+                    addLog(`${gameState.equippedWeapon}损坏了！`, "danger");
+                    weapon.count--;
+                    if (weapon.count <= 0) {
+                        delete gameState.inventory[gameState.equippedWeapon];
+                        gameState.equippedWeapon = null;
+                    }
+                }
+                
+                // 远程武器需要弹药
+                if (gameState.equippedWeapon === "手枪") {
+                    if (weapon.ammo <= 0) {
+                        addLog("没有弹药了！", "danger");
+                        baseDamage = 5; // 仍然可以用枪托攻击
+                    } else {
+                        weapon.ammo--;
+                    }
+                }
+            }
+            
+            // 应用技能加成
+            if (gameState.equippedWeapon && gameState.equippedWeapon === "手枪") {
+                baseDamage *= gameState.rangedDamageBonus;
+            } else if (gameState.equippedWeapon) {
+                baseDamage *= gameState.meleeDamageBonus;
+            }
+            
+            const damage = Math.floor(baseDamage * (0.8 + Math.random() * 0.4));
+            
+            if (Math.random() < 0.7) { // 70% 成功几率
+                let damageTaken = Math.floor(Math.random() * 15) + 5 - Math.floor(gameState.defense / 3);
+                
+                if (gameState.equippedArmor) {
+                    const armor = gameState.inventory[gameState.equippedArmor];
+                    damageTaken = Math.max(0, damageTaken - armor.defense);
+                    
+                    // 护甲耐久损耗
+                    armor.durability = Math.max(0, armor.durability - 3);
+                    if (armor.durability <= 0) {
+                        addLog(`${gameState.equippedArmor}损坏了！`, "danger");
+                        armor.count--;
+                        if (armor.count <= 0) {
+                            delete gameState.inventory[gameState.equippedArmor];
+                            gameState.equippedArmor = null;
+                        }
+                    }
+                }
+                
+                gameState.health -= Math.max(0, damageTaken);
+                
+                if (Math.random() < 0.4) { // 40% 几率被感染
+                    const infectionAmount = 10 + Math.floor(Math.random() * 5);
+                    gameState.infection += infectionAmount;
+                    addLog(`击退了丧尸但受到 ${damageTaken} 点伤害并被感染(+${infectionAmount})`, "danger");
+                } else {
+                    addLog(`击退了丧尸但受到 ${damageTaken} 点伤害`, damageTaken > 10 ? "danger" : "warning");
+                }
+                
+                // 战斗奖励
+                if (Math.random() < 0.6) {
+                    const loot = ["绷带", "罐头", "木材", "金属"][Math.floor(Math.random() * 4)];
+                    addItem(loot, 1);
+                }
+                
+                // 低概率获得稀有物品
+                if (Math.random() < 0.1) {
+                    const rareLoot = ["抗生素", "镇静剂", "电子零件", "弹药"][Math.floor(Math.random() * 4)];
+                    addItem(rareLoot, 1);
+                    addLog(`从丧尸身上找到了${rareLoot}！`, "positive");
+                }
+            } else {
+                addLog("成功击退丧尸且未受伤", "positive");
+                if (Math.random() < 0.7) {
+                    addItem("罐头", 2);
+                }
+            }
+            
+            // 战斗降低SAN值
+            gameState.san = Math.max(0, gameState.san - 10);
+            
+            updateUI();
+        }
+
+        function craft() {
+            openCraftModal();
+        }
+
+        function build() {
+            openBuildModal();
+        }
+
+        function showSkills() {
+            openSkillsModal();
+        }
+
+        function treat() {
+            if (useItem("绷带", 1)) {
+                const healing = Math.floor(20 * gameState.healingBonus);
+                gameState.health = Math.min(gameState.maxHealth, gameState.health + healing);
+                addLog(`使用绷带恢复了${healing}点生命值`, "positive");
+            } else if (useItem("抗生素", 1)) {
+                gameState.infection = Math.max(0, gameState.infection - 30);
+                addLog("使用抗生素降低了感染程度", "positive");
+            } else if (useItem("镇静剂", 1)) {
+                gameState.san = Math.min(gameState.maxSan, gameState.san + 20);
+                addLog("使用镇静剂稳定了精神状态", "positive");
+            } else {
+                addLog("没有可用的医疗物品", "warning");
+            }
+            updateUI();
+        }
+
+        function travel(x, y) {
+            if (x < 0 || x >= 5 || y < 0 || y >= 5) {
+                addLog("无法向那个方向移动", "warning");
+                return;
+            }
+            
+            const destination = gameState.map[y][x];
+            if (!destination) {
+                addLog("那里什么都没有", "info");
+                return;
+            }
+            
+            if (destination === gameState.location) {
+                addLog("你已经在这里了", "info");
+                return;
+            }
+            
+            // 旅行消耗能量
+            const distance = Math.abs(x - gameState.currentPosition.x) + Math.abs(y - gameState.currentPosition.y);
+            const energyCost = distance * 10;
+            
+            if (gameState.energy < energyCost) {
+                addLog("没有足够的精力前往那里", "warning");
+                return;
+            }
+            
+            gameState.energy -= energyCost;
+            gameState.currentPosition = { x, y };
+            gameState.location = destination;
+            
+            // 发现新地点
+            if (!gameState.discoveredLocations.includes(destination)) {
+                gameState.discoveredLocations.push(destination);
+                addLog(`发现了新的地点：${destination}`, "positive");
+                
+                // 发现新地点奖励
+                gameState.skillPoints++;
+                addLog("因探索获得1点技能点", "positive");
+            }
+            
+            // 更新位置描述
+            elements["location-description"].textContent = gameState.locations[destination].description;
+            
+            // 旅行可能遭遇随机事件
+            if (Math.random() < 0.4) {
+                triggerRandomEvent();
+            }
+            
+            addLog(`移动到了${destination}`, "info");
+            updateUI();
+        }
+
+        // ======================
+        // 物品和装备管理
+        // ======================
+        function addItem(item, quantity = 1) {
+            if (!gameState.inventory[item]) {
+                // 如果是新物品，初始化它的属性
+                switch (item) {
+                    case "木制长矛":
+                        gameState.inventory[item] = { type: "weapon", count: 0, damage: 12, durability: 40 };
+                        break;
+                    case "简易陷阱":
+                        gameState.inventory[item] = { type: "tool", count: 0, effect: "增加搜刮成功率" };
+                        break;
+                    case "铁制护甲":
+                        gameState.inventory[item] = { type: "armor", count: 0, defense: 6, durability: 50 };
+                        break;
+                    default:
+                        gameState.inventory[item] = { type: "resource", count: 0 };
+                }
+            }
+            
+            gameState.inventory[item].count += quantity;
+            return true;
+        }
+
+        function useItem(item, quantity = 1) {
+            if (gameState.inventory[item] && gameState.inventory[item].count >= quantity) {
+                gameState.inventory[item].count -= quantity;
+                
+                if (gameState.inventory[item].count <= 0) {
+                    delete gameState.inventory[item];
+                    
+                    // 如果装备被用完，取消装备
+                    if (gameState.equippedWeapon === item) {
+                        gameState.equippedWeapon = null;
+                    }
+                    if (gameState.equippedArmor === item) {
+                        gameState.equippedArmor = null;
+                    }
+                }
+                
+                return true;
+            }
+            return false;
+        }
+
+        function equipItem(item) {
+            if (!gameState.inventory[item]) return false;
+            
+            const itemData = gameState.inventory[item];
+            
+            if (itemData.type === "weapon") {
+                gameState.equippedWeapon = item;
+                addLog(`装备了${item}`, "positive");
+                return true;
+            } else if (itemData.type === "armor") {
+                gameState.equippedArmor = item;
+                addLog(`装备了${item}`, "positive");
+                return true;
+            }
+            
+            return false;
+        }
+
+        function hasItem(item, quantity = 1) {
+            return gameState.inventory[item] && gameState.inventory[item].count >= quantity;
+        }
+
+        function hasStatusEffect(effectName) {
+            return gameState.statusEffects.some(effect => effect.name === effectName);
+        }
+
+        // ======================
+        // 制作系统
+        // ======================
+        function openCraftModal() {
+            const modal = document.getElementById("craft-modal");
+            const recipesContainer = document.getElementById("craft-recipes");
+            
+            recipesContainer.innerHTML = "";
+            
+            // 显示所有可制作的配方
+            for (const [recipeName, recipe] of Object.entries(gameState.recipes)) {
+                // 检查是否满足前提条件
+                let canCraft = true;
+                if (recipe.requires) {
+                    for (const [facility, level] of Object.entries(recipe.requires)) {
+                        if (gameState.facilities[facility].level < level) {
+                            canCraft = false;
+                            break;
+                        }
+                    }
+                }
+                
+                // 检查材料是否足够
+                for (const [material, amount] of Object.entries(recipe.materials)) {
+                    if (!hasItem(material, amount)) {
+                        canCraft = false;
+                        break;
+                    }
+                }
+                
+                const recipeElement = document.createElement("div");
+                recipeElement.className = "recipe";
+                recipeElement.style.opacity = canCraft ? 1 : 0.5;
+                
+                let html = `<div class="recipe-name">${recipeName}</div>`;
+                html += `<div class="recipe-materials">需要: `;
+                
+                for (const [material, amount] of Object.entries(recipe.materials)) {
+                    html += `${material} x${amount} `;
+                }
+                
+                html += `</div>`;
+                
+                if (recipe.requires) {
+                    html += `<div class="recipe-requirements">前提: `;
+                    for (const [facility, level] of Object.entries(recipe.requires)) {
+                        html += `${facility} Lv.${level} `;
+                    }
+                    html += `</div>`;
+                }
+                
+                if (canCraft) {
+                    html += `<button class="btn" onclick="craftItem('${recipeName}')" style="width: 100%; margin-top: 5px;">制作</button>`;
+                } else {
+                    html += `<button class="btn btn-disabled" style="width: 100%; margin-top: 5px;" disabled>无法制作</button>`;
+                }
+                
+                recipeElement.innerHTML = html;
+                recipesContainer.appendChild(recipeElement);
+            }
+            
+            modal.style.display = "block";
+        }
+
+        function craftItem(recipeName) {
+            const recipe = gameState.recipes[recipeName];
+            
+            // 再次检查材料
+            for (const [material, amount] of Object.entries(recipe.materials)) {
+                if (!hasItem(material, amount)) {
+                    addLog(`制作${recipeName}缺少${material}`, "warning");
+                    return;
+                }
+            }
+            
+            // 消耗材料
+            for (const [material, amount] of Object.entries(recipe.materials)) {
+                useItem(material, amount);
+            }
+            
+            // 添加成品
+            const resultItem = Object.keys(recipe.result)[0];
+            const resultAmount = recipe.result[resultItem];
+            
+            addItem(resultItem, resultAmount);
+            addLog(`成功制作了${resultItem} x${resultAmount}`, "positive");
+            
+            // 关闭模态框
+            document.getElementById("craft-modal").style.display = "none";
+            updateUI();
+        }
+
+        // ======================
+        // 建造系统
+        // ======================
+        function openBuildModal() {
+            const modal = document.getElementById("build-modal");
+            const buildContainer = document.getElementById("build-options");
+            
+            buildContainer.innerHTML = "";
+            
+            // 显示所有可建造/升级的设施
+            for (const [facilityName, facility] of Object.entries(gameState.facilities)) {
+                // 检查是否可以升级
+                const canUpgrade = facility.level < facility.maxLevel;
+                
+                // 检查资源是否足够
+                let canBuild = true;
+                if (canUpgrade) {
+                    for (const [material, amount] of Object.entries(facility.requirements)) {
+                        if (!hasItem(material, amount)) {
+                            canBuild = false;
+                            break;
+                        }
+                    }
+                }
+                
+                const facilityElement = document.createElement("div");
+                facilityElement.className = "facility";
+                
+                let html = `<div><strong>${facilityName}</strong> Lv.${facility.level}/${facility.maxLevel}</div>`;
+                html += `<div style="font-size: 12px; margin: 5px 0;">${facility.description}</div>`;
+                
+                if (canUpgrade) {
+                    html += `<div style="font-size: 12px; margin-bottom: 5px;">升级需要: `;
+                    for (const [material, amount] of Object.entries(facility.requirements)) {
+                        html += `${material} x${amount} `;
+                    }
+                    html += `</div>`;
+                    
+                    if (canBuild) {
+                        html += `<button class="btn" onclick="upgradeFacility('${facilityName}')" style="width: 100%;">升级</button>`;
+                    } else {
+                        html += `<button class="btn btn-disabled" style="width: 100%;" disabled>资源不足</button>`;
+                    }
+                } else {
+                    html += `<div style="font-size: 12px; color: #999;">已达到最大等级</div>`;
+                }
+                
+                facilityElement.innerHTML = html;
+                buildContainer.appendChild(facilityElement);
+            }
+            
+            modal.style.display = "block";
+        }
+
+        function upgradeFacility(facilityName) {
+            const facility = gameState.facilities[facilityName];
+            
+            // 再次检查是否可以升级
+            if (facility.level >= facility.maxLevel) {
+                addLog(`${facilityName}已经达到最大等级`, "warning");
+                return;
+            }
+            
+            // 检查材料
+            for (const [material, amount] of Object.entries(facility.requirements)) {
+                if (!hasItem(material, amount)) {
+                    addLog(`升级${facilityName}缺少${material}`, "warning");
+                    return;
+                }
+            }
+            
+            // 消耗材料
+            for (const [material, amount] of Object.entries(facility.requirements)) {
+                useItem(material, amount);
+            }
+            
+            // 升级设施
+            facility.level++;
+            addLog(`${facilityName}已升级到等级 ${facility.level}`, "positive");
+            
+            // 关闭模态框
+            document.getElementById("build-modal").style.display = "none";
+            updateUI();
+        }
+
+        // ======================
+        // 技能系统
+        // ======================
+        function openSkillsModal() {
+            const modal = document.getElementById("skills-modal");
+            const skillPointsElement = document.getElementById("skill-points");
+            const skillTreesContainer = document.getElementById("skill-trees");
+            
+            skillPointsElement.textContent = gameState.skillPoints;
+            skillTreesContainer.innerHTML = "";
+            
+            // 显示所有技能
+            for (const [skillName, skill] of Object.entries(gameState.skills)) {
+                const skillElement = document.createElement("div");
+                skillElement.className = "skill";
+                
+                // 确定技能状态
+                if (skill.learned) {
+                    skillElement.classList.add("learned");
+                } else {
+                    // 检查前提条件
+                    let requirementsMet = true;
+                    for (const req of skill.requirements) {
+                        if (!gameState.skills[req].learned) {
+                            requirementsMet = false;
+                            break;
+                        }
+                    }
+                    
+                    if (requirementsMet && gameState.skillPoints >= skill.cost) {
+                        skillElement.classList.add("available");
+                    } else {
+                        skillElement.classList.add("unavailable");
+                    }
+                }
+                
+                let html = `<div><strong>${skillName}</strong></div>`;
+                html += `<div style="font-size: 12px; margin: 5px 0;">${skill.description}</div>`;
+                html += `<div style="font-size: 11px; color: #999;">消耗: ${skill.cost}点`;
+                
+                if (skill.requirements.length > 0) {
+                    html += ` | 前提: ${skill.requirements.join(", ")}`;
+                }
+                
+                html += `</div>`;
+                
+                if (!skill.learned) {
+                    if (skillElement.classList.contains("available")) {
+                        html += `<button class="btn" onclick="learnSkill('${skillName}')" style="width: 100%; margin-top: 5px;">学习</button>`;
+                    } else {
+                        html += `<button class="btn btn-disabled" style="width: 100%; margin-top: 5px;" disabled>无法学习</button>`;
+                    }
+                } else {
+                    html += `<button class="btn btn-disabled" style="width: 100%; margin-top: 5px;" disabled>已学习</button>`;
+                }
+                
+                skillElement.innerHTML = html;
+                skillTreesContainer.appendChild(skillElement);
+            }
+            
+            modal.style.display = "block";
+        }
+
+        function learnSkill(skillName) {
+            const skill = gameState.skills[skillName];
+            
+            // 检查是否已经学会
+            if (skill.learned) {
+                addLog(`已经学会了${skillName}`, "warning");
+                return;
+            }
+            
+            // 检查技能点
+            if (gameState.skillPoints < skill.cost) {
+                addLog(`技能点不足，无法学习${skillName}`, "warning");
+                return;
+            }
+            
+            // 检查前提条件
+            for (const req of skill.requirements) {
+                if (!gameState.skills[req].learned) {
+                    addLog(`学习${skillName}需要先学习${req}`, "warning");
+                    return;
+                }
+            }
+            
+            // 学习技能
+            gameState.skillPoints -= skill.cost;
+            skill.learned = true;
+            
+            // 应用技能效果
+            if (skill.effect) {
+                skill.effect();
+            }
+            
+            addLog(`学会了新技能：${skillName}`, "positive");
+            
+            // 刷新技能界面
+            openSkillsModal();
+            updateUI();
+        }
+
+        // ======================
+        // UI更新和初始化
+        // ======================
+        function updateUI() {
+            // 更新基础状态
+            elements.day.textContent = gameState.day;
+            elements.time.textContent = gameState.times[gameState.time];
+            elements["location-tag"].textContent = gameState.location;
+            elements["temperature"].textContent = `🌡️ ${gameState.temperature}°C`;
+            elements["weather"].textContent = gameState.weatherIcons[gameState.weathers.indexOf(gameState.weather)];
+            
+            // 更新状态值和进度条
+            elements.health.textContent = `${gameState.health}/${gameState.maxHealth}`;
+            elements.hunger.textContent = `${gameState.hunger}/${gameState.maxHunger}`;
+            elements.energy.textContent = `${gameState.energy}/${gameState.maxEnergy}`;
+            elements.infection.textContent = `${gameState.infection}/${gameState.maxInfection}`;
+            elements.san.textContent = `${gameState.san}/${gameState.maxSan}`;
+            
+            elements["health-bar"].style.width = `${(gameState.health / gameState.maxHealth) * 100}%`;
+            elements["hunger-bar"].style.width = `${(gameState.hunger / gameState.maxHunger) * 100}%`;
+            elements["energy-bar"].style.width = `${(gameState.energy / gameState.maxEnergy) * 100}%`;
+            elements["infection-bar"].style.width = `${(gameState.infection / gameState.maxInfection) * 100}%`;
+            elements["san-bar"].style.width = `${(gameState.san / gameState.maxSan) * 100}%`;
+            
+            // 更新防御值
+            let defense = gameState.defense;
+            if (gameState.equippedArmor) {
+                defense += gameState.inventory[gameState.equippedArmor].defense;
+            }
+            elements.defense.textContent = defense;
+            
+            // 更新物品栏
+            updateInventoryUI();
+            
+            // 更新状态效果
+            updateStatusEffectsUI();
+            
+            // 更新地图
+            updateMapUI();
+            
+            // 根据状态禁用按钮
+            updateButtonStates();
+        }
+
+        function updateInventoryUI() {
+            const itemsContainer = document.getElementById("inventory-items");
+            const weaponsContainer = document.getElementById("inventory-weapons");
+            const armorContainer = document.getElementById("inventory-armor");
+            const resourcesContainer = document.getElementById("inventory-resources");
+            
+            itemsContainer.innerHTML = "";
+            weaponsContainer.innerHTML = "";
+            armorContainer.innerHTML = "";
+            resourcesContainer.innerHTML = "";
+            
+            for (const [itemName, itemData] of Object.entries(gameState.inventory)) {
+                const itemElement = document.createElement("div");
+                itemElement.className = "item";
+                
+                let countText = `x${itemData.count}`;
+                if (itemData.type === "weapon" && itemData.ammo !== undefined) {
+                    countText = `(${itemData.ammo}/${itemData.maxAmmo})`;
+                } else if (itemData.durability !== undefined) {
+                    countText = `${Math.floor((itemData.durability / (itemData.maxDurability || 100)) * 100)}%`;
+                }
+                
+                itemElement.innerHTML = `
+                    <div>${itemName}</div>
+                    <div class="item-count">${countText}</div>
+                `;
+                
+                // 添加点击事件
+                if (itemData.type === "medical") {
+                    itemElement.addEventListener("click", () => {
+                        if (itemName === "绷带") {
+                            treat();
+                        } else if (itemName === "抗生素") {
+                            treat();
+                        } else if (itemName === "镇静剂") {
+                            treat();
+                        }
+                    });
+                } else if (itemData.type === "weapon" || itemData.type === "armor") {
+                    itemElement.addEventListener("click", () => {
+                        equipItem(itemName);
+                    });
+                }
+                
+                // 分类显示
+                switch (itemData.type) {
+                    case "weapon":
+                        weaponsContainer.appendChild(itemElement.cloneNode(true));
+                        break;
+                    case "armor":
+                        armorContainer.appendChild(itemElement.cloneNode(true));
+                        break;
+                    case "resource":
+                        resourcesContainer.appendChild(itemElement.cloneNode(true));
+                        break;
+                    default:
+                        itemsContainer.appendChild(itemElement);
+                }
+            }
+        }
+
+        function updateStatusEffectsUI() {
+            const container = document.getElementById("status-effects");
+            container.innerHTML = "";
+            
+            // 庇护所基础效果
+            const shelterEffect = document.createElement("div");
+            shelterEffect.className = "status-effect effect-buff";
+            shelterEffect.textContent = "庇护所 +5防御";
+            container.appendChild(shelterEffect);
+            
+            // 装备效果
+            if (gameState.equippedArmor) {
+                const armorEffect = document.createElement("div");
+                armorEffect.className = "status-effect effect-buff";
+                armorEffect.textContent = `${gameState.equippedArmor} +${gameState.inventory[gameState.equippedArmor].defense}防御`;
+                container.appendChild(armorEffect);
+            }
+            
+            // 感染效果
+            if (gameState.infection > 0) {
+                const infectionEffect = document.createElement("div");
+                infectionEffect.className = "status-effect effect-debuff";
+                
+                if (gameState.infection < 30) {
+                    infectionEffect.textContent = "轻微感染";
+                } else if (gameState.infection < 70) {
+                    infectionEffect.textContent = "中度感染";
+                } else {
+                    infectionEffect.textContent = "重度感染";
+                }
+                
+                container.appendChild(infectionEffect);
+            }
+            
+            // 其他状态效果
+            for (const effect of gameState.statusEffects) {
+                if (effect.name !== "庇护所") {
+                    const effectElement = document.createElement("div");
+                    effectElement.className = `status-effect effect-${effect.type === "buff" ? "buff" : "debuff"}`;
+                    effectElement.textContent = effect.name;
+                    container.appendChild(effectElement);
+                }
+            }
+        }
+
+        function updateMapUI() {
+            const mapGrid = document.getElementById("map-grid");
+            mapGrid.innerHTML = "";
+            
+            for (let y = 0; y < 5; y++) {
+                for (let x = 0; x < 5; x++) {
+                    const location = gameState.map[y][x];
+                    const tile = document.createElement("div");
+                    tile.className = "map-tile";
+                    
+                    if (!location) {
+                        tile.textContent = "？";
+                        tile.classList.add("undiscovered");
+                    } else {
+                        if (gameState.discoveredLocations.includes(location)) {
+                            tile.textContent = location.substring(0, 2);
+                            tile.classList.add("discovered");
+                            
+                            if (location === gameState.location) {
+                                tile.classList.add("current");
+                            }
+                            
+                            tile.addEventListener("click", () => travel(x, y));
+                        } else {
+                            tile.textContent = "？";
+                            tile.classList.add("undiscovered");
+                        }
+                    }
+                    
+                    mapGrid.appendChild(tile);
+                }
+            }
+        }
+
+        function updateButtonStates() {
+            // 根据能量值禁用按钮
+            const energyButtons = ["btn-explore", "btn-scavenge", "btn-fight"];
+            for (const btnId of energyButtons) {
+                const btn = document.getElementById(btnId);
+                if (gameState.energy < 15) {
+                    btn.classList.add("btn-disabled");
+                } else {
+                    btn.classList.remove("btn-disabled");
+                }
+            }
+            
+            // 根据位置禁用休息按钮
+            document.getElementById("btn-rest").classList.toggle("btn-disabled", gameState.location !== "避难所");
+            
+            // 根据是否有食物禁用进食按钮
+            document.getElementById("btn-eat").classList.toggle("btn-disabled", 
+                !hasItem("罐头") && !hasItem("瓶装水"));
+            
+            // 根据是否有医疗物品禁用治疗按钮
+            document.getElementById("btn-treat").classList.toggle("btn-disabled", 
+                !hasItem("绷带") && !hasItem("抗生素") && !hasItem("镇静剂"));
+        }
+
+        function addLog(message, type = "info") {
+            const timeLabel = gameState.times[gameState.time];
+            const logEntry = document.createElement("div");
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timeLabel}] ${message}`;
+            elements["log-entries"].prepend(logEntry);
+            
+            // 限制日志数量
+            if (elements["log-entries"].children.length > 10) {
+                elements["log-entries"].removeChild(elements["log-entries"].lastChild);
+            }
+        }
+
+        // ======================
+        // 初始化游戏
+        // ======================
+        function initGame() {
+            initializeMap();
+            
+            // 设置按钮事件
+            document.getElementById("btn-next").addEventListener("click", nextTime);
+            document.getElementById("btn-explore").addEventListener("click", explore);
+            document.getElementById("btn-scavenge").addEventListener("click", scavenge);
+            document.getElementById("btn-rest").addEventListener("click", rest);
+            document.getElementById("btn-eat").addEventListener("click", eat);
+            document.getElementById("btn-fight").addEventListener("click", fight);
+            document.getElementById("btn-craft").addEventListener("click", craft);
+            document.getElementById("btn-build").addEventListener("click", build);
+            document.getElementById("btn-skills").addEventListener("click", showSkills);
+            document.getElementById("btn-treat").addEventListener("click", treat);
+            
+            // 关闭模态框按钮
+            document.getElementById("btn-close-craft").addEventListener("click", () => {
+                document.getElementById("craft-modal").style.display = "none";
+            });
+            
+            document.getElementById("btn-close-build").addEventListener("click", () => {
+                document.getElementById("build-modal").style.display = "none";
+            });
+            
+            document.getElementById("btn-close-skills").addEventListener("click", () => {
+                document.getElementById("skills-modal").style.display = "none";
+            });
+            
+            // 标签页切换
+            document.querySelectorAll(".tab").forEach(tab => {
+                tab.addEventListener("click", function() {
+                    // 移除所有active类
+                    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+                    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+                    
+                    // 添加active类到当前标签
+                    this.classList.add("active");
+                    const tabId = `tab-${this.dataset.tab}`;
+                    document.getElementById(tabId).classList.add("active");
+                });
+            });
+            
+            // 所有按钮点击效果
+            document.querySelectorAll(".btn").forEach(btn => {
+                btn.addEventListener("click", function() {
+                    // 添加点击特效
+                    this.style.boxShadow = "0 0 10px var(--primary-color)";
+                    setTimeout(() => {
+                        this.style.boxShadow = "none";
+                    }, 200);
+                });
+            });
+            
+            updateUI();
+            addLog("游戏开始，努力在丧尸末日中生存下去！", "info");
+        }
+
+        // 启动游戏
+        window.onload = initGame;
+    </script>
 </body>
 </html>
